@@ -1,22 +1,59 @@
-# S2S_forecast
-Copyright and Usage Notice
+# K-TempCast v1
 
-This code is an extended and improved implementation based on the CNN-backbone Model-Agnostic Meta-Learning (MAML) code developed and provided by Oh and Ham (2024), as originally proposed in the following study:
-Oh, S. H., & Ham, Y. G. (2024). Few shot learning for Korean winter temperature forecasts. npj Climate and Atmospheric Science, 7(1), 279.
-(Official GitHub repository to be referenced upon public release)
+Deep-learning–based subseasonal-to-seasonal (S2S) prediction framework for Korean summer temperature variability.
 
-The present work integrates the ExtremeCast methodology to enhance extreme value prediction performance through the implementation of the Exloss loss function and the ExBooster approach, as described in:
-ExtremeCast: Boosting Extreme Value Prediction for Global Weather Forecast- Xu, W., Chen, K., Han, T., Chen, H., Ouyang, W., & Bai, L. (2024). Extremecast: Boosting extreme value prediction for global weather forecast. arXiv preprint arXiv:2402.01295.
-Their codes and the model checkpoints are available at https://github.com/black-yt/ExtremeCast
+This repository contains the official research implementation of **K-TempCast v1**, developed for subseasonal-to-seasonal prediction of **monthly mean summer (June–August) surface air temperature anomalies over the Korean Peninsula**.
 
-This improved model code was developed at Seoul National University, South Korea, by: Seohee Yang (seoheey0428@snu.ac.kr) & Seok-Woo Son (seokwooson@snu.ac.kr)
-and was funded by the Korea Meteorological Administration Research and Development Program under Grant (RS-2025-02307979)
+The model is based on an **episode-based meta-learning framework** with a CNN encoder and a gated global–regional residual architecture. The framework is designed to address two key challenges in seasonal climate prediction:
 
-Legal Notice
+- Limited sample size in observational climate datasets
+- Nonstationary relationships between large-scale circulation and regional temperature variability
 
-This repository contains original research code developed for academic and scientific purposes.
-Any use, reproduction, modification, distribution, or derivative work based on this code is strictly prohibited without prior written permission from the authors.
+The code in this repository corresponds to the methodology described in the associated research manuscript.
 
-If this code is used in any form of academic, research, or commercial work, proper citation and explicit acknowledgment of all original authors and affiliated institutions is mandatory.
 
-Unauthorized use or redistribution without permission may result in legal consequences.
+## Model Overview
+
+K-TempCast consists of three main components:
+
+1. **CNN trunk (feature extractor)**  
+   Extracts large-scale circulation features from climate input fields.
+
+2. **Dual prediction heads**
+   - **Global branch**: captures global circulation signals  
+   - **Regional branch**: focuses on dynamically relevant regional domains
+
+3. **Gated residual aggregation**
+
+The final prediction is computed as:
+
+p = p_g + w (p_r − p_g)
+
+where  
+
+- p_g : global prediction  
+- p_r : regional prediction  
+- w : learned gating weight
+
+Meta-learning enables the model to **adapt quickly to each prediction year using a small support set**.
+
+
+## Meta-Learning Framework
+
+Each prediction year is treated as an individual **task (episode)**.
+
+Training proceeds as:
+
+1. **Support set**  
+   Used for inner adaptation (3 gradient descent steps)
+
+2. **Query set**  
+   Used to compute prediction error
+
+3. **Outer update**  
+   Query loss updates all trainable parameters of the model.
+
+To account for climate nonstationarity, **support samples are drawn from a rolling window of recent years**.
+
+
+## Repository Structure
