@@ -57,30 +57,32 @@ To account for climate nonstationarity, **support samples are drawn from a rolli
 
 
 ## Repository Structure
+
+```
 K-TempCast/
 │
 ├── ae/
-│ Autoencoder-based pretraining code for the CNN trunk
+│   Autoencoder-based pretraining code for the CNN trunk
 │
 ├── grad/
-│ Grad-CAM analysis tools for model interpretation
+│   Grad-CAM analysis tools for model interpretation
 │
 ├── model/
-│ Core K-TempCast model architecture
+│   Core K-TempCast model architecture
 │
 ├── scripts/
-│ ktemp.py
-│ Main training and prediction pipeline for the K-TempCast model
+│   ktemp.py
+│       Main training and prediction pipeline for the K-TempCast model
 │
-│ run_ktemp.sh
-│ Example script to run the model
+│   run_ktemp.sh
+│       Example script to run the model
 │
 ├── utils/
-│ Data loading and preprocessing utilities
+│   Data loading and preprocessing utilities
 │
 └── README.md
-
-
+```
+````markdown ## Repository Structure ```text K-TempCast/ │ ├── ae/ │ Autoencoder-based pretraining code for the CNN trunk. │ This folder contains the autoencoder model and related scripts │ used to initialize the shared CNN encoder before meta-learning. │ ├── grad/ │ Grad-CAM analysis tools for model interpretation. │ These scripts are used to analyze spatial attribution patterns │ and identify the circulation regions that contribute most strongly │ to model predictions. │ ├── model/ │ Core K-TempCast model architecture. │ This folder contains the implementation of the main K-TempCast model, │ including the CNN trunk, global/regional branches, and gated residual aggregation. │ ├── scripts/ │ ktemp.py │ Main training and prediction pipeline for the K-TempCast model. │ This script handles meta-training, meta-testing, ensemble prediction, │ and overall experiment execution. │ │ run_ktemp.sh │ Example shell script for running the model. │ This file provides an execution example for launching experiments │ with the desired environment and parameter settings. │ ├── utils/ │ Data loading and preprocessing utilities. │ This folder contains helper functions for reading datasets, │ organizing inputs and labels, and preparing data for model training/testing. │ └── README.md Repository overview, usage notes, references, and citation information. ```
 
 ## Related Work
 
