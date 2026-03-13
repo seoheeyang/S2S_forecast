@@ -102,13 +102,15 @@ https://github.com/black-yt/ExtremeCast
 
 ## Authors
 
-Developed at **Seoul National University, South Korea**
-
-Seohee Yang  
-seoheey0428@snu.ac.kr
-
-Seok-Woo Son  
-seokwooson@snu.ac.kr
+Research Institute of Basic Sciences, Seoul National University, Seoul, Republic of Korea
+Seohee H. Yang, Chang-Hyun Park, Seok-Geun Oh
+Interdisciplinary Program in AI, Seoul National University, Seoul, Republic of Korea 
+Yelim Kim
+Information & Electronics Research Institute, Korea Advanced Institute of Science and Technology
+Seol-Hee Oh
+Department of Environmental Managements, Graduate School of Environmental Studies, Seoul National University, Seoul, South Korea
+Yoo-Geun Ham 
+School of Earth and Environmental Sciences, Seoul National University, Republic of Korea Seohee H. Yang, Chang-Hyun Park, Seok-Geun Oh, Seok-Woo Son
 
 
 ## Funding
@@ -122,8 +124,8 @@ under Grant **RS-2025-02307979**.
 
 If you use this code in academic work, please cite:
 
-Yang, S., & Son, S.-W. (2025).  
-K-TempCast: Meta-learning framework for subseasonal-to-seasonal prediction of Korean summer temperature.
+Yang et al., 2026  
+Subseasonal-to-Seasonal Summer Temperature Prediction over Korea Using K-TempCast model
 
 and
 
