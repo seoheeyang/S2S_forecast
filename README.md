@@ -57,3 +57,87 @@ To account for climate nonstationarity, **support samples are drawn from a rolli
 
 
 ## Repository Structure
+K-TempCast/
+│
+├── ae/
+│ Autoencoder-based pretraining code for the CNN trunk
+│
+├── grad/
+│ Grad-CAM analysis tools for model interpretation
+│
+├── model/
+│ Core K-TempCast model architecture
+│
+├── scripts/
+│ ktemp.py
+│ Main training and prediction pipeline for the K-TempCast model
+│
+│ run_ktemp.sh
+│ Example script to run the model
+│
+├── utils/
+│ Data loading and preprocessing utilities
+│
+└── README.md
+
+
+
+## Related Work
+
+This work builds upon the meta-learning framework introduced in:
+
+Oh, S. H., & Ham, Y. G. (2024).  
+Few-shot learning for Korean winter temperature forecasts.  
+npj Climate and Atmospheric Science, 7(1), 279.
+
+The present implementation also integrates ideas from **ExtremeCast**, which improves prediction of extreme values through specialized loss functions and training strategies:
+
+Xu, W., Chen, K., Han, T., Chen, H., Ouyang, W., & Bai, L. (2024).  
+ExtremeCast: Boosting extreme value prediction for global weather forecast.  
+arXiv:2402.01295
+
+ExtremeCast code:  
+https://github.com/black-yt/ExtremeCast
+
+
+## Authors
+
+Developed at **Seoul National University, South Korea**
+
+Seohee Yang  
+seoheey0428@snu.ac.kr
+
+Seok-Woo Son  
+seokwooson@snu.ac.kr
+
+
+## Funding
+
+This research was supported by the  
+**Korea Meteorological Administration Research and Development Program**  
+under Grant **RS-2025-02307979**.
+
+
+## Citation
+
+If you use this code in academic work, please cite:
+
+Yang, S., & Son, S.-W. (2025).  
+K-TempCast: Meta-learning framework for subseasonal-to-seasonal prediction of Korean summer temperature.
+
+and
+
+Oh, S. H., & Ham, Y. G. (2024).  
+Few-shot learning for Korean winter temperature forecasts.  
+npj Climate and Atmospheric Science, 7(1), 279.
+
+
+## Legal Notice
+
+This repository contains original research code developed for academic and scientific purposes.
+
+Any use, reproduction, modification, distribution, or derivative work based on this code is strictly prohibited without prior written permission from the authors.
+
+If this code is used in any form of academic, research, or commercial work, proper citation and explicit acknowledgment of all original authors and affiliated institutions is mandatory.
+
+Unauthorized use or redistribution without permission may result in legal consequences.
