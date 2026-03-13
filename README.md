@@ -82,7 +82,17 @@ K-TempCast/
 │
 └── README.md
 ```
+The ae/ directory contains the autoencoder-based pretraining code used to initialize the CNN trunk before the meta-learning stage. The pretrained encoder provides a stable representation of large-scale circulation patterns that is later used by the K-TempCast model.
 
+The grad/ directory includes Grad-CAM analysis scripts used for model interpretation. These tools are used to identify the spatial regions that contribute most strongly to the model’s predictions and to diagnose the circulation patterns captured by the network.
+
+The model/ directory contains the core implementation of the K-TempCast architecture. This includes the CNN trunk, the global and regional prediction heads, and the gated residual aggregation module that combines the two predictions.
+
+The scripts/ directory provides the main scripts for training and running the model. In particular, ktemp.py contains the main training and prediction pipeline of the K-TempCast model, including meta-training, meta-testing, and ensemble prediction procedures. The run_ktemp.sh file provides an example shell script for executing the model and running experiments.
+
+The utils/ directory contains supporting utilities such as data loading and preprocessing functions used to prepare the climate datasets for training and prediction.
+
+Finally, this README.md file provides an overview of the repository, including model description, usage notes, references, and citation information.
 
 ## Related Work
 
