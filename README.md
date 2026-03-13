@@ -139,12 +139,6 @@ If you use this code in academic work, please cite:
 Yang et al. (2026)
 Subseasonal-to-Seasonal Summer Temperature Prediction over Korea Using K-TempCast model
 
-and
-
-Oh, S. H., & Ham, Y. G. (2024).  
-Few-shot learning for Korean winter temperature forecasts.  
-npj Climate and Atmospheric Science, 7(1), 279.
-
 
 ## Legal Notice
 
