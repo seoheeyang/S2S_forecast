@@ -124,7 +124,7 @@ under Grant **RS-2025-02307979**.
 
 If you use this code in academic work, please cite:
 
-Yang et al., 2026  
+Yang et al. (2026)
 Subseasonal-to-Seasonal Summer Temperature Prediction over Korea Using K-TempCast model
 
 and
