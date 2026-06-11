@@ -48,7 +48,7 @@ CONFIG = {
     "USE_TF_FUNCTION": True,
     "SEED": 42,
 
-    "EXP_NAME": "new_z500_gl", #GL은 Model/KTEMP.py에서 w를 0으로 바꾸고, NA, EA시에는 w로 설정
+    "EXP_NAME": "new_z500_gl", 
 }
 
 CONFIG["OUTPUT_DIR"] = (
@@ -66,7 +66,6 @@ from src.gradcam_analyzer import run_gradcam_analysis
 def setup_gpu():
     os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
     
-    # GPU 실패시 자동으로 CPU로 fallback
     tf.config.set_soft_device_placement(True)
     
     gpus = tf.config.experimental.list_physical_devices("GPU")
@@ -343,16 +342,8 @@ def main():
     save_result_to_binary(preds, CONFIG["OUTPUT_DIR"], "forecast_0ENSEMBLE", start_year=test_start_year)
     print("[DONE] Saved to:", CONFIG["OUTPUT_DIR"])
 
-    # =========================
-    # Grad-CAM analysis
-    # - warm(상위) 보면 q90을 쓰는 게 맞음
-    # - select_by="pred": 모델이 warm으로 예측한 케이스의 근거
-    # - select_by="obs" : 실제 warm(정답) 케이스의 근거
-    # =========================
-
     q_thr = float(q66)
 
-    # 1) final prediction 기준
     run_gradcam_analysis(
         model=model,
         inp_all=inp_all,
