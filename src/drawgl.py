@@ -76,7 +76,7 @@ GLOSEA_SPLIT_YEAR = 2017  # first forecast year
 # ============================================================
 # Base climatology (1950-2004 mean, Kelvin) - month specific
 # ============================================================
-CLIM_BASE_K = 291.80363808  # June (target 파일 만들 때 나오는 climatology value (월마다 다름))
+CLIM_BASE_K = 291.80363808  # June
 
 # ============================================================
 # Helpers
