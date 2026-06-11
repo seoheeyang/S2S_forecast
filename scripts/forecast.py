@@ -9,12 +9,11 @@ CONFIG = {
     "MAIN_DIR": pathlib.Path("/path/MAML_for_climate/"),
     "INPUT_DIR": "dataset/",
     
-    # 학습된 모델 경로
     "TRAINED_MODEL_PATH": "/path/MAML_for_climate/output/new_z500_na/train_itr300_update3/ensemble_num0ENSEMBLE/",
     
     "START_YEAR": 1950,
     "TRAIN_END_YEAR": 2004,
-    "PREDICT_YEARS": [2025, 2026],  # 예측할 해
+    "PREDICT_YEARS": [2025, 2026], 
     
     "FILTER1": 64,
     "FILTER2": 128,
@@ -85,7 +84,6 @@ def compute_region_idx(lat_1d, lon_1d, lat_min, lat_max, lon_min, lon_max):
     return {"lat": lat_idx.astype(np.int32), "lon": lon_idx.astype(np.int32)}
 
 def load_climate_data(input_path):
-    # 1950-2026 입력 데이터
     inp_file = input_path / "ysh_z500_diff_tzuv_inp_may_dt_19502004_std_2nd_19502026.nc"
     
     with Dataset(inp_file, "r") as f:
@@ -100,7 +98,6 @@ def load_climate_data(input_path):
     inp = to_nhwc_lonlat_from_netcdf(inp_raw)
     print(f"[CHECK] inp shape: {inp.shape}")  # (77, lon, lat, 4) - 1950~2026
     
-    # 2025년까지 target
     lab_file = input_path / "ysh_lab_june_dt_19502004_std_2nd_19502025.nc"
     with Dataset(lab_file, "r") as f:
         lab = f.variables["target_anomaly"][:]
@@ -163,8 +160,7 @@ def main():
     tf.random.set_seed(CONFIG["SEED"] * ENSEMBLE)
     
     setup_gpu()
-    
-    # 데이터 로드
+
     inp_all, lab_all, train_len, region_idx, qs = load_climate_data(
         CONFIG["MAIN_DIR"] / CONFIG["INPUT_DIR"]
     )
@@ -174,7 +170,6 @@ def main():
     print(f"[DIMS] xdim(lon)={xdim}, ydim(lat)={ydim}, zdim(C)={zdim}")
     print(f"[QS] q10={q10:.3f}, q33={q33:.3f}, q66={q66:.3f}, q90={q90:.3f}")
     
-    # 모델 생성
     model = KTempCastModel(
         shot=CONFIG["SHOT"],
         xdim=xdim, ydim=ydim, zdim=zdim,
@@ -192,7 +187,6 @@ def main():
         use_tf_function=False,
     )
     
-    # 학습된 weights 로드
     trained_path = CONFIG["TRAINED_MODEL_PATH"].replace("0ENSEMBLE", f"0{ENSEMBLE}")
     weights_file = pathlib.Path(trained_path) / "full.weights.h5"
     
@@ -202,8 +196,7 @@ def main():
     print(f"[LOAD] Loading trained weights from: {weights_file}")
     model.load_weights(str(weights_file))
     print("[OK] Weights loaded!")
-    
-    # 예측할 연도의 인덱스
+
     predict_indices = []
     predict_years = []
     for year in CONFIG["PREDICT_YEARS"]:
@@ -216,7 +209,6 @@ def main():
     
     print(f"[PREDICT] Years: {predict_years}")
     
-    # 예측
     preds = []
     for idx, year in zip(predict_indices, predict_years):
         # Support pool: 과거 20년
@@ -239,7 +231,6 @@ def main():
             k_steps=CONFIG["TRAIN_UPDATES"],
         )
         
-        # 예측
         p = model.predict_point(
             tf.convert_to_tensor(inp_all[idx:idx+1], tf.float32)
         ).numpy()[0]
@@ -250,14 +241,12 @@ def main():
         print(f"  Year {year}: pred={p:.4f}, support_pool=[{pool[0]+CONFIG['START_YEAR']}..{pool[-1]+CONFIG['START_YEAR']}] (n={len(pool)})")
     
     preds = np.asarray(preds, dtype=np.float32)
-    
-    # 저장
+
     output_dir = pathlib.Path(trained_path)
     save_result_to_binary(preds, output_dir, f"forecast_2025_2026_ens{ENSEMBLE}", start_year=predict_years[0])
     
     print(f"[DONE] Predictions for {predict_years}: {preds}")
-    
-    # 2025년 검증 (target 있음)
+
     if 2025 in predict_years:
         idx_2025 = predict_years.index(2025)
         lab_2025 = lab_all[2025 - CONFIG["START_YEAR"]]
