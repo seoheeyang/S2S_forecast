@@ -2,7 +2,7 @@
 
 Deep-learning–based subseasonal-to-seasonal (S2S) prediction framework for Korean summer temperature variability.
 
-This repository contains the official research implementation of **K-TempCast v1**, developed for subseasonal-to-seasonal prediction of **monthly mean summer (June–August) surface air temperature anomalies over the Korean Peninsula**.
+This repository contains the official research implementation of **K-TempCast v1**, developed for subseasonal-to-seasonal prediction of **monthly mean summer (June–July) surface air temperature anomalies over the Korean Peninsula**.
 
 The model is based on an **episode-based meta-learning framework** with a CNN encoder and a gated global–regional residual architecture. The framework is designed to address two key challenges in seasonal climate prediction:
 
@@ -64,10 +64,10 @@ K-TempCast/
 ├── ae/
 │   Autoencoder-based pretraining code for the CNN trunk
 │
-├── grad/
-│   Grad-CAM analysis tools for model interpretation
+├── src/
+│   Grad-CAM analysis tools for model interpretation+Figure drawing codes
 │
-├── model/
+├── Model/
 │   Core K-TempCast model architecture
 │
 ├── scripts/
@@ -84,7 +84,7 @@ K-TempCast/
 ```
 The ae/ directory contains the autoencoder-based pretraining code used to initialize the CNN trunk before the meta-learning stage. The pretrained encoder provides a stable representation of large-scale circulation patterns that is later used by the K-TempCast model.
 
-The grad/ directory includes Grad-CAM analysis scripts used for model interpretation. These tools are used to identify the spatial regions that contribute most strongly to the model’s predictions and to diagnose the circulation patterns captured by the network.
+The src/ directory includes Grad-CAM analysis scripts used for model interpretation. These tools are used to identify the spatial regions that contribute most strongly to the model’s predictions and to diagnose the circulation patterns captured by the network. Also includes drawing code
 
 The model/ directory contains the core implementation of the K-TempCast architecture. This includes the CNN trunk, the global and regional prediction heads, and the gated residual aggregation module that combines the two predictions.
 
@@ -114,15 +114,17 @@ https://github.com/black-yt/ExtremeCast
 
 ## Authors
 
-Research Institute of Basic Sciences, Seoul National University, Seoul, Republic of Korea
-Seohee H. Yang, Chang-Hyun Park, Seok-Geun Oh
-Interdisciplinary Program in AI, Seoul National University, Seoul, Republic of Korea 
-Yelim Kim
-Information & Electronics Research Institute, Korea Advanced Institute of Science and Technology
-Seol-Hee Oh
-Department of Environmental Managements, Graduate School of Environmental Studies, Seoul National University, Seoul, South Korea
-Yoo-Geun Ham 
-School of Earth and Environmental Sciences, Seoul National University, Republic of Korea Seohee H. Yang, Chang-Hyun Park, Seok-Geun Oh, Seok-Woo Son
+Seohee H. Yang1,2, Chang-Hyun Park1,2, Seok-Geun Oh1,2, Jeongin Seo1,2, Yelim Kim3, Seol-Hee Oh4, Yoo-Geun Ham5, Jin-Ho Yoon6, Jun-Hyeok Son7, Seok-Woo Son1,3*
+
+1. School of Earth and Environmental Sciences, Seoul National University, Republic of Korea; seokwooson@snu.ac.kr (S-W.S)
+2. Research Institute of Basic Sciences, Seoul National University, Seoul, Republic of Korea; seoheey0428@snu.ac.kr (S.H.Y); sweetweather@snu.ac.kr (C-H.P); seokgeunoh@snu.ac.kr (S-G.O); Jeonginseo@snu.ac.kr (J.S)
+3. Interdisciplinary Program in AI, Seoul National University, Seoul, Republic of Korea; limkim@snu.ac.kr (Y.K)
+4. Office of Media and Public Engagement, Korea Foundation for Science & Creativity, Seoul, Republic of Korea; oseol1129@gmail.com (S-H.O)
+5. Department of Environmental Managements, Graduate School of Environmental Studies, Seoul National University, Seoul, Republic of Korea; yoogeun@snu.ac.kr (Y-G.H)
+6. Department of Environment and Energy Engineering, Gwangju Institute of Science and Technology, Gwangju, Republic of Korea; yjinho@gist.ac.kr (J-H.Y)
+7. Climate Prediction Division, Korea Meteorological Administration, Republic of Korea; jhson6447@korea.kr (J-H.S)
+Corresponding author: Seok-Woo Son (seokwooson@snu.ac.kr)
+
 
 
 ## Funding
@@ -136,8 +138,8 @@ under Grant **RS-2025-02307979**.
 
 If you use this code in academic work, please cite:
 
-Yang et al. (2026)
-Subseasonal-to-Seasonal Summer Temperature Prediction over Korea Using K-TempCast model
+**Yang et al. (2026)
+Summer temperature prediction over Korea using the K-TempCast model**
 
 
 ## Legal Notice
