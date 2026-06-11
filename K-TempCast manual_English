@@ -1,0 +1,318 @@
+# K-TempCast
+## Korean Peninsula Summer Temperature Forecast Model
+### User Manual v1.0
+Weather and Climate Dynamics Lab, Seoul National University  
+*Based on Yang et al. (2025), JGR: Machine Learning and Computation*
+
+---
+
+## 1. Overview
+
+K-TempCast is a deep learning-based framework for predicting monthly mean temperature anomalies over the Korean Peninsula during boreal summer (June and July) at the subseasonal-to-seasonal (S2S) scale. Using ERA5 reanalysis data as input, the framework combines a CNN-based shared encoder (CNN Trunk), a gated global–regional residual architecture, and episodic meta-learning, achieving superior June prediction skill compared to the GloSea6 dynamical model.
+
+### 1.1 Key Components
+
+- **Shared CNN Encoder (Trunk):** 2-block CNN with 3×3 kernels and stride 2. Filters: 64→128. Initialized from autoencoder pretraining weights.
+- **Global–Regional Branch (GL/NA/EA):** Global average pooling (GL) + regional crop pooling (NA: North Atlantic, EA: East Asia)
+- **Gate Network:** 2-layer MLP (GELU). Weighted combination of global and regional predictions: `p = p_g + w·(p_r − p_g)`
+- **ExLoss:** Extreme-value weighted loss (upper/lower 10%). `MSE + α·ExLoss` (α = 100/81, default)
+- **Meta-learning (MAML-style):** Support 5 years, Query 15 years, Inner 3-step. 30 ensemble members
+
+### 1.2 Experiment Case Summary
+
+| Case | Global Branch | Regional Branch | AE Pretraining | ExLoss |
+|------|--------------|----------------|----------------|--------|
+| GL | 10°S–60°N (global) | None | ✓ | ×1 |
+| NA | 10°S–60°N (global) | North Atlantic (0–60°N, 80°W–0°) | ✓ | ×1 |
+| EA | 10°S–60°N (global) | East Asia (0–50°N, 90–150°E) | ✓ | ×1 |
+| GL-NoAE | 10°S–60°N (global) | None | ✗ | ×1 |
+| GL-ExLoss×0 | 10°S–60°N (global) | None | ✓ | ×0 (MSE only) |
+
+**Key Results Summary**
+- June: NA case ACC = 0.79 (p < 0.01), GL case ACC = 0.69, GloSea6 ACC = 0.62
+- July: GL ACC = 0.42 (not significant), GloSea6 ACC = 0.61
+
+---
+
+## 2. Directory Structure and File Descriptions
+
+```
+K_TempCast/
+├── prepro/          # Input/target preprocessing
+│   ├── input_diff.py
+│   └── target_summer_dt_19502004_std.py
+├── AE/              # Autoencoder pretraining
+│   ├── step1_ae_diff_z500.py
+│   ├── step2_ae_diff_z500.py
+│   ├── ktemp_train_autoencoder_new_z500.py
+│   └── core/ktemp_pretrain_autoencoder.py
+├── scripts/         # Model training and prediction
+│   ├── run_ktemp.sh
+│   ├── ktemp.py
+│   └── run_forecast.py
+├── Model/KTEMPCAST.py
+├── utils/
+└── src/             # Verification and visualization
+    ├── drawgl.py
+    ├── trnmax_new.py
+    └── forecast_draw.py
+```
+
+### 2.1 Generated Data Files
+
+| Filename | Description |
+|----------|-------------|
+| `ysh_lab_june_dt_19502004_std_2nd_19502025.nc` | June target data (1950–2025, standardized) |
+| `ysh_lab_july_dt_19502004_std_2nd_19502025.nc` | July target data |
+| `ysh_lab_augu_dt_19502004_std_2nd_19502025.nc` | August target data |
+| `ysh_z500_diff_tzuv_inp_may_dt_19502004_std_2nd.nc` | May input field (tendency, for June prediction) |
+| `ysh_z500_diff_tzuv_inp_june_dt_19502004_std_2nd.nc` | June input field (for July prediction) |
+| `ysh_z500_diff_tzuv_inp_july_dt_19502004_std_2nd.nc` | July input field (for August prediction) |
+
+---
+
+## 3. Step 0: Preprocessing (prepro/)
+
+### 3.1 Input Field Generation — `input_diff.py`
+
+The input field is the **Tendency Field** defined in Section 3.1 of the paper:
+
+> Week 2 of the month preceding the target month − Last week of two months prior
+
+- June prediction input: Mean of May 8–14 − Mean of April 24–30
+- Variables: T2M (2-m air temperature), Z500 (500 hPa geopotential height), U200 (200 hPa zonal wind), V850 (850 hPa meridional wind)
+- Grid: 5°×5°, 10°S–60°N, 0°–360°E → shape (N, 4, 15, 72)
+
+### 3.2 Target Data Generation — `target_summer_dt_19502004_std.py`
+
+Area-mean monthly T2M anomaly over the Korean Peninsula (125–130°E, 35–40°N), unit: K. Anomaly computed relative to training-period (1950–2004) climatology → linear detrend → z-score standardization.
+
+> ⚠️ **Important:** All preprocessing statistics (climatology, trend, standard deviation) are computed using the training period only (1950–2004) to prevent data leakage.
+
+---
+
+## 4. Steps 1–2: Autoencoder Pretraining Data (AE/)
+
+The autoencoder (AE) pretraining step enables the CNN Trunk to learn large-scale circulation structures from unlabeled atmospheric data prior to K-TempCast training. The pretrained encoder weights are subsequently used as the initialization for K-TempCast.
+
+### 4.1 Step 1: 14-day Difference Sample Extraction — `step1_ae_diff_z500.py`
+
+- **Purpose:** Use the difference between atmospheric fields 14 days apart as AE training input (tendency)
+- **Input:** ERA5 6-hourly data (00, 06, 12, 18 UTC), 1950–2024
+- **Processing months:** April–August. Only the training period (1950–2004) is used for AE pretraining
+- **Output shape:** (N, 4, 15, 72)
+
+```bash
+cd AE/
+python step1_ae_diff_z500.py
+# Output:
+# summer_tz500uv_diff14d_train.npy  (1950–2004)
+# summer_tz500uv_diff14d_val.npy    (2005–2014)
+# summer_tz500uv_diff14d_test.npy   (2015–2024)
+# summer_tz500uv_diff14d_meta_*.npy (year/month/day metadata)
+```
+
+### 4.2 Step 2: Daily Average + Date-wise Preprocessing — `step2_ae_diff_z500.py`
+
+- **Daily average:** 4 UTC times (00/06/12/18) → 1 daily mean
+- **Date-wise grouping:** Group same calendar dates across years (e.g., all April 1st) to form annual time series
+- **Preprocessing order:** ① Climatology removal (1950–2004) → ② Anomaly → ③ Detrend (2nd-order polynomial, per grid) → ④ Z-score standardization
+
+```bash
+python step2_ae_diff_z500.py
+# Output:
+# summer_tz500uv_diff14d_train_daily.npy
+# summer_tz500uv_diff14d_val_daily.npy
+# summer_tz500uv_diff14d_test_daily.npy
+```
+
+### 4.3 Autoencoder Training — `ktemp_train_autoencoder_new_z500.py`
+
+Loads the AE model from `core/ktemp_pretrain_autoencoder.py` and executes training. The encoder architecture is identical to the K-TempCast CNN Trunk (3×3 conv, stride 2, BN, Tanh, 64→128 filters).
+
+- Input: `summer_tz500uv_diff14d_train_daily.npy` (training), `val_daily.npy` (validation)
+- Loss: MSE reconstruction loss
+- Output: Pretrained weight file (loaded in `ktemp.py`)
+
+```bash
+python ktemp_train_autoencoder_new_z500.py
+# Training criterion: Convergence of validation loss (~40–50 epochs)
+# Reconstruction pattern correlation targets:
+#   T2M > 0.97, Z500 > 0.99, U200 > 0.98, V850 > 0.97
+```
+
+---
+
+## 5. Step 3: Model Training (scripts/)
+
+### 5.1 Execution Structure
+
+```
+run_ktemp.sh
+  └─▶ ktemp.py
+        └─▶ ../Model/KTEMPCAST.py
+        └─▶ ../utils/
+```
+
+### 5.2 Case Configuration
+
+Case selection is controlled by the value of `w` at **line 215 of `Model/KTEMPCAST.py`**:
+
+- **GL case** (no regional branch): `w = 0` → `p_final = pg`
+- **NA case:** set `w` to learned gate weight (non-zero); configure regional crop to NA coordinates
+- **EA case:** same as NA but set regional crop coordinates to EA region
+
+Regional branch coordinates:
+- NA: latitude 0–60°N, longitude 80°W–0°
+- EA: latitude 0–50°N, longitude 90–150°E
+
+### 5.3 Meta-learning Configuration (Table 1 Summary)
+
+| Parameter | Value |
+|-----------|-------|
+| Training period | 1950–2004 (55 years) |
+| Test period | 2005–2024 (20 years) |
+| Support set | 5 years/episode (stratified sampling from 20-year rolling pool) |
+| Query set | 15 years/episode (random from full training period) |
+| Inner-loop updates | 3 gradient steps (head_g, head_r, gate_fc1, gate_fc2 only) |
+| Outer-loop optimizer | Adam, lr 0.002 → 0.001 (300 iterations) |
+| Ensemble members | 30 (different random seeds) |
+| Loss function | MSE + α·ExLoss (α = 100/81) |
+
+### 5.4 Training Execution
+
+```bash
+cd scripts/
+
+# GL case (verify w=0 at line 215 of KTEMPCAST.py)
+bash run_ktemp.sh
+
+# NA case (activate w, set NA region)
+bash run_ktemp.sh
+
+# Background execution (prevent disconnection)
+nohup bash run_ktemp.sh > log_gl.out 2>&1 &
+echo $!   # Check PID (to terminate: kill <PID>)
+```
+
+---
+
+## 6. Step 4: Verification and Visualization (src/)
+
+### 6.1 Time-series Prediction Plot — `drawgl.py`
+
+Plots K-TempCast predictions vs. ERA5 vs. GloSea6 time series (Figure 2 format).
+
+- GL case: run as is
+- NA/EA case: change the `name` variable inside the script to `'NA'` or `'EA'`
+
+```bash
+cd src/
+python drawgl.py
+```
+
+### 6.2 Tercile Performance Diagram — `trnmax_new.py`
+
+Visualizes Cold/Normal/Warm tercile prediction performance as a Performance Diagram (POD vs SR with CSI contours; Figures 3, 4, 5 format).
+
+```bash
+python trnmax_new.py
+```
+
+### 6.3 GloSea6 Reference File Format
+
+GloSea6 result files (`jun/jul/aug.ano.2005-2024.1-9.txt`) contain ensemble-mean anomalies (K) for each year based on 1st and 9th initialization dates, stored in chronological order. See `src/README.txt` for detailed format.
+
+---
+
+## 7. Operational Forecast (scripts/run_forecast.py)
+
+This is the operational forecast stage. Predictions are made for specific future years outside the test period.
+
+### 7.1 Execution Flow
+
+```
+scripts/run_forecast.py
+  └─▶ forecast.py  (load weights → construct support → inner adapt → predict)
+  └─▶ src/forecast_draw.py  (visualize results)
+```
+
+### 7.2 Configuration
+
+- **Weight path:** Set the model weight file path in `forecast.py` to the trained checkpoint
+- **Support construction:** Stratified sampling of 5 years from the 20-year window preceding target year t (t−20 to t−1)
+- **Prediction output:** Per-member predictions, ensemble mean, ensemble spread (uncertainty estimate)
+
+```bash
+cd scripts/
+python run_forecast.py
+
+cd ../src/
+python forecast_draw.py
+```
+
+> ⚠️ Before running `run_forecast.py`, verify that the weight file path (checkpoint path) and input data path in the script are correctly configured for the current server environment.
+
+---
+
+## 8. Full Pipeline Summary
+
+```
+[ ERA5 6-hourly data ]
+         │
+         ▼
+┌─────────────────────────────────────────┐
+│  Step 0: Preprocessing (prepro/)        │
+│  input_diff.py → input fields (.nc)     │
+│  target_summer.py → target data (.nc)   │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Step 1: 14-day diff extraction (AE/)   │
+│  step1_ae_diff_z500.py → *.npy          │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Step 2: Daily avg + date preprocessing │
+│  step2_ae_diff_z500.py → *_daily.npy    │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Step 3: Autoencoder pretraining        │
+│  ktemp_train_autoencoder_new_z500.py    │
+│  → pretrained weights saved            │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Step 4: K-TempCast meta-training       │
+│  run_ktemp.sh → ktemp.py → KTEMPCAST.py│
+│  Cases: GL / NA / EA                    │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Step 5: Verification & Visualization   │
+│  drawgl.py → time-series plot           │
+│  trnmax_new.py → tercile diagram        │
+└──────────────────┬──────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────┐
+│  Step 6: Operational forecast           │
+│  run_forecast.py → forecast_draw.py     │
+└─────────────────────────────────────────┘
+```
+
+---
+
+## 9. Reference Information
+
+- **Paper title:** Summer temperature prediction over Korea using the K-TempCast model
+- **Authors:** Seohee H. Yang, Chang-Hyun Park, Seok-Geun Oh, Jeongin Seo, Yelim Kim, Seol-Hee Oh, Yoo-Geun Ham, Jin-Ho Yoon, Jun-Hyeok Son, Seok-Woo Son*
+- **Journal:** Journal of Geophysical Research: Machine Learning and Computation
+- **Code repository:** https://github.com/seoheeyang/S2S_forecast
+- **ERA5 data:** https://cds.climate.copernicus.eu (DOI: 10.24381/cds.adbb2d47)
