@@ -1,0 +1,9 @@
+Autoencoder Reconstruction Summary
+==================================================
+Train sample count: 20
+Val sample count:   20
+
+Train MSE: 0.030088
+Train MAE: 0.127475
+Val MSE:   0.053257
+Val MAE:   0.167631
