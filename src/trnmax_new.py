@@ -2,7 +2,7 @@ import os, sys
 import numpy as np
 from netCDF4 import Dataset
 import matplotlib
-matplotlib.use("TkAgg")   # 서버 GUI 없으면 "Agg"로 변경
+matplotlib.use("TkAgg")  
 import matplotlib.pyplot as plt
 from matplotlib import font_manager as fm
 from matplotlib.lines import Line2D
@@ -115,7 +115,6 @@ def load_meta_anom_for_exp(exp_name, tdim, mu, std, climat, trend_full, clim_obs
 
     meta_mean_z = np.mean(em, axis=0)  # (tdim,)
 
-    # 1950..2024에서 2005는 index 55
     trend_seg = trend_full[55:55+tdim]
     meta_restored = inv_zscore(meta_mean_z, mu, std) + float(climat) + trend_seg
     meta_anom = meta_restored - float(clim_obs)
