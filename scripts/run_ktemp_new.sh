@@ -4,7 +4,6 @@ conda activate tf22-env
 
 TRAIN_UP=3
 
-# 시작 시간 기록
 start_time=$(date +%s)
 echo "Start Time: $(date)"
 
